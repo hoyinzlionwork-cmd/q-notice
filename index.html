@@ -55,8 +55,11 @@ h3{font-size:1rem;margin:.4rem 0}.mx td,.mx th{text-align:center}.mx td:first-ch
 const A=[["跟主管佈達","Eason"],["跟二力佈達","浩然"],["跟產品佈達","各線二力"],["公告 & 二力森友會公告","欣怡"]];
 const L=["1 美加","2 紐澳","3 歐洲","4 亞非","5 大陸港澳","6A 日本","6C 韓國","7 東南亞","9 台灣","璽品","郵輪","運動","鐵道","高球"];
 const EARLY={7:"09/24 已提前上線"};
-let st={a:[],l:{}};try{st=JSON.parse(localStorage.getItem("ck3"))||st}catch(e){}
-const sv=()=>{try{localStorage.setItem("ck3",JSON.stringify(st))}catch(e){}};
+let st={a:[],l:{}};
+const API="/api/state";
+const fromMap=m=>{const o={a:[],l:{}};for(const k in m){const v=m[k];if(k[0]==="a")o.a[+k.slice(1)]=v;else{const[i,j]=k.slice(1).split("_").map(Number);(o.l[i]=o.l[i]||[])[j]=v}}return o};
+async function load(){try{const r0=await fetch(API,{cache:"no-store"});if(r0.ok){st=fromMap(await r0.json());r()}}catch(e){}}
+async function sv(set){try{const r0=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({set})});if(r0.ok){st=fromMap(await r0.json());r()}}catch(e){alert("儲存失敗，請檢查網路後再試一次")}}
 const now=()=>{const d=new Date(),z=n=>String(n).padStart(2,"0");return `${z(d.getMonth()+1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`};
 const cb=(on,f,lab,ts=true)=>`<input type="checkbox" aria-label="${lab}" ${on?'checked':''} onchange="${f}">${ts&&typeof on==="string"?`<div class="ts">${on}</div>`:''}`;
 function r(){for(const i in EARLY)st.l[i]=[EARLY[i],EARLY[i],EARLY[i]];
@@ -66,9 +69,9 @@ tb2.innerHTML=L.map((x,i)=>{const v=st.l[i]||[];if(EARLY[i])return `<tr class="e
 const col=k=>L.every((_,i)=>(st.l[i]||[])[k]);let n=[0,1,2].filter(col).length;
 tf.innerHTML=`<tr><td><b>全部完成</b></td>${[0,1,2].map(k=>`<td>${cb(col(k),`tall(${k})`,'全部完成',false)}</td>`).join("")}</tr>`;
 p2.textContent=`${n}/3`}
-function ta(i){st.a[i]=st.a[i]?null:now();sv();r()}
-function tl(i,k){const v=st.l[i]=st.l[i]||[];v[k]=v[k]?null:now();sv();r()}
-function tall(k){const on=!L.every((_,i)=>(st.l[i]||[])[k]);L.forEach((_,i)=>{if(EARLY[i])return;const v=(st.l[i]=st.l[i]||[]);v[k]=on?(v[k]||now()):null});sv();r()}
+function ta(i){st.a[i]=st.a[i]?null:now();r();sv({["a"+i]:st.a[i]})}
+function tl(i,k){const v=st.l[i]=st.l[i]||[];v[k]=v[k]?null:now();r();sv({[`l${i}_${k}`]:v[k]})}
+function tall(k){const on=!L.every((_,i)=>(st.l[i]||[])[k]);L.forEach((_,i)=>{if(EARLY[i])return;const v=(st.l[i]=st.l[i]||[]);v[k]=on?(v[k]||now()):null});r();const set={};L.forEach((_,i)=>{if(!EARLY[i])set[`l${i}_${k}`]=st.l[i][k]});sv(set)}
 function cp(){navigator.clipboard.writeText(ann.innerText).then(()=>{event.target.textContent="已複製"})}
-r();
+r();load();setInterval(()=>{if(!document.hidden)load()},15000);
 </script></body></html>
